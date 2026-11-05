@@ -1,0 +1,12 @@
+Job: freestyle-calculator
+Build commands                                       : cd lab2\java-app javac -d build/classes src/Calculator.java test/CalculatorTest.java java -DsimulateBug=%SIMULATE_BUG% -cp build/classes CalculatorTest jar cfe build/calculator.jar Calculator -C build/classes .
+Parameter name and default value   ,      : SIMULATE_BUG, false
+Git repository URL and branch      , branch        : https://github.com/nouhakhyari-sys/jenkins-labs-template.git, branch */main
+Test report path                                 : lab2/java-app/build/test-results/*.xml
+Archived file, fingerprint?        ,  : lab2/java-app/build/calculator.jar, true
+Downstream job and its condition   , : freestyle-deploy, SUCCESS
+Job: java-calculator (Lab 3)
+
+7. Are the build commands in this file? (yes / no)                       : no
+
+8. What do you find instead?           ,         : (Git repo URL of the job), Jenkinsfile
