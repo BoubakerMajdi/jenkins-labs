@@ -1,0 +1,155 @@
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+    }
+
+    parameters {
+        booleanParam(name: 'SIMULATE_BUG', defaultValue: false,
+                     description: 'Tick to put a bug in the calculator')
+        choice(name: 'TARGET', choices: ['test', 'production'],
+               description: 'Where to deploy')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/nouhakhyari-sys/jenkins-labs-template.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                dir('lab2/java-app') {
+                    bat 'javac -d build/classes src/Calculator.java test/CalculatorTest.java'
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                dir('lab2/java-app') {
+                    bat "java -DsimulateBug=${params.SIMULATE_BUG} -cp build/classes CalculatorTest"
+                }
+            }
+            post {
+                always {
+                    junit 'lab2/java-app/build/test-results/*.xml'
+                }
+            }
+        }
+        stage('Package') {
+            steps {
+                dir('lab2/java-app') {
+                    bat 'jar cfe build/calculator.jar Calculator -C build/classes .'
+                }
+                archiveArtifacts artifacts: 'lab2/java-app/build/calculator.jar', fingerprint: true
+            }
+        }
+        stage('Deploy') {
+            steps {
+                input message: "Deploy calculator.jar to ${params.TARGET}?", ok: 'Deploy'
+                echo "Deploying calculator.jar to ${params.TARGET}..."
+            }
+        }
+    }
+
+    post {
+        success {                         // NEW
+            emailext to: 'team@lab.local',
+                     subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                     body: "Build passed: ${env.BUILD_URL}"
+        }
+        unstable {                        // NEW
+            emailext to: 'team@lab.local',
+                     subject: "UNSTABLE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                     body: "Tests failed: ${env.BUILD_URL}testReport/",
+                     attachLog: true
+        }
+        failure {                         // NEW
+            emailext to: 'team@lab.local',
+                     subject: "FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                     body: "Build broken: ${env.BUILD_URL}console",
+                     attachLog: true
+        }
+        always {
+            cleanWs()
+        }
+    }
+}pipeline {
+    agent any
+
+    options {
+        timestamps()
+    }
+
+    parameters {
+        booleanParam(name: 'SIMULATE_BUG', defaultValue: false,
+                     description: 'Tick to put a bug in the calculator')
+        choice(name: 'TARGET', choices: ['test', 'production'],
+               description: 'Where to deploy')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/nouhakhyari-sys/jenkins-labs-template.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                dir('lab2/java-app') {
+                    bat 'javac -d build/classes src/Calculator.java test/CalculatorTest.java'
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                dir('lab2/java-app') {
+                    bat "java -DsimulateBug=${params.SIMULATE_BUG} -cp build/classes CalculatorTest"
+                }
+            }
+            post {
+                always {
+                    junit 'lab2/java-app/build/test-results/*.xml'
+                }
+            }
+        }
+        stage('Package') {
+            steps {
+                dir('lab2/java-app') {
+                    bat 'jar cfe build/calculator.jar Calculator -C build/classes .'
+                }
+                archiveArtifacts artifacts: 'lab2/java-app/build/calculator.jar', fingerprint: true
+            }
+        }
+        stage('Deploy') {
+            steps {
+                input message: "Deploy calculator.jar to ${params.TARGET}?", ok: 'Deploy'
+                echo "Deploying calculator.jar to ${params.TARGET}..."
+            }
+        }
+    }
+
+    post {
+        success {                         // NEW
+            emailext to: 'team@lab.local',
+                     subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                     body: "Build passed: ${env.BUILD_URL}"
+        }
+        unstable {                        // NEW
+            emailext to: 'team@lab.local',
+                     subject: "UNSTABLE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                     body: "Tests failed: ${env.BUILD_URL}testReport/",
+                     attachLog: true
+        }
+        failure {                         // NEW
+            emailext to: 'team@lab.local',
+                     subject: "FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                     body: "Build broken: ${env.BUILD_URL}console",
+                     attachLog: true
+        }
+        always {
+            cleanWs()
+        }
+    }
+}
